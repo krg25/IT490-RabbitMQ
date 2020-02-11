@@ -10,7 +10,7 @@ function doLogin($username,$password)
 	if (!isset($dbc)){
 	require('mysqli_connect.php');
 	}
-	$q = "SELECT * FROM users WHERE (username='$username' AND password='$password')";
+	$q = "SELECT * FROM SiteUsers WHERE (username='$username' AND password='$password')";
 	$r = @mysqli_query($dbc, $q);
 	$num = @mysqli_num_rows($r);
 	$report = "";
