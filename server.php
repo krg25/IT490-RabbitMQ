@@ -3,26 +3,45 @@
 require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
+ini_set('display_errors', 'On');
 
 function doLogin($username,$password)
 {
-    //SQL query here we should probably salt passwords
-	//select * from users where USERNAME = $username, PASSWORD = $password
-	//if result.length = 1 (one response from sql)
-	if ($username == "ken"){
-    	return true;
+	if (!isset($dbc)){
+	require('mysqli_connect.php');
+	}
+	$q = "SELECT * FROM users WHERE (username='$username' AND password='$password')";
+	$r = @mysqli_query($dbc, $q);
+	$num = @mysqli_num_rows($r);
+	$report = "";
+
+	if (empty(mysqli_error($dbc))){
+		if ($num == 1){
+		mysqli_close($dbc);
+		echo "Valid login!\n";
+		return true;
+		}
+		else
+		{
+		echo "Error: Incorrect login\n";
+		mysqli_close($dbc);
+		return false;
+		}
 	}
 	else
 	{
-	return false;
+		echo "SQL Error: ".mysqli_error($dbc)."\n";
+		mysqli_close($dbc);
+		return false;
 	}
-  
+
 }
 
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;
   var_dump($request);
+
 
   if(!isset($request['type']))
   {
