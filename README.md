@@ -1,1 +1,3 @@
-# RabbitMQ Scripts, I will explain how to use this soon
+# RabbitMQ Scripts
+
+The master branch of this repo is the testing grounds for each machine's rabbit-related scripts. Check the branches for information pertaining to specific machines.
