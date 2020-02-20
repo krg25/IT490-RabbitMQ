@@ -10,7 +10,7 @@ function doLogin($username,$password)
 	if (!isset($dbc)){
 	require('mysqli_connect.php');
 	}
-	$q = mysqli_real_escape_string($dbc,"SELECT * FROM SiteUsers WHERE (username=$username AND password=$password)");
+	$q = "SELECT * FROM SiteUsers WHERE (username='$username' AND password='$password')";
 	$r = @mysqli_query($dbc, $q);
 	$num = @mysqli_num_rows($r);
 	$report = "";
@@ -41,7 +41,7 @@ function doRegister($username,$password,$email,$fname,$lname)
 	if (!isset($dbc)){
 	require('mysqli_connect.php');
 	}
-	$q = mysqli_real_escape_string($dbc,"INSERT INTO SiteUsers (username, password, email, first_name, last_name) VALUES ($username, $password, $email, $fname, $lname)");
+	$q = "INSERT INTO SiteUsers (username, password, email, first_name, last_name) VALUES ('$username', '$password', '$email', '$fname', '$lname')";
 	$r = @mysqli_query($dbc, $q);
 	$num = @mysqli_num_rows($r);
 	$report = "";
