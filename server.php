@@ -36,6 +36,37 @@ function doLogin($username,$password)
 	}
 
 }
+function doRegister($username,$password,$email,$fname,$lname)
+{
+	if (!isset($dbc)){
+	require('mysqli_connect.php');
+	}
+	$q = "INSERT INTO SiteUsers (username, password, email, first_name, last_name) VALUES ($username, $password, $email, $fname, $lname)";
+	$r = @mysqli_query($dbc, $q);
+	$num = @mysqli_num_rows($r);
+	$report = "";
+
+	if (empty(mysqli_error($dbc))){
+		if ($num == 1){
+		mysqli_close($dbc);
+		echo "New Registration!\n";
+		return true;
+		}
+		else
+		{
+		echo "A registration resulted in an error: ".mysqli_error($dbc).PHP_EOL;
+		mysqli_close($dbc);
+		return false;
+		}
+	}
+	else
+	{
+		echo "SQL Error: ".mysqli_error($dbc)."\n";
+		mysqli_close($dbc);
+		return false;
+	}
+
+}
 
 function requestProcessor($request)
 {
@@ -56,6 +87,17 @@ function requestProcessor($request)
 	else
 	{
 	  return array("returnCode" => '2', 'message'=>"Unsuccessful Login");
+	}
+    
+
+	
+     case "Register":
+     if(doRegister($request['username'],$request['password'],$request['email'],$request['fname'],$request['lname'])){
+	  return array("returnCode" => '1', 'message'=>"Successful Registration");
+	}
+	else
+	{
+	  return array("returnCode" => '2', 'message'=>"Unsuccessful Registration");
 	}
 
 
