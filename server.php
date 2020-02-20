@@ -47,7 +47,6 @@ function doRegister($username,$password,$email,$fname,$lname)
 	$report = "";
 
 	if (empty(mysqli_error($dbc))){
-		if ($num == 1){
 		mysqli_close($dbc);
 		echo "New Registration!\n";
 		return true;
@@ -58,13 +57,8 @@ function doRegister($username,$password,$email,$fname,$lname)
 		mysqli_close($dbc);
 		return false;
 		}
-	}
-	else
-	{
-		echo "SQL Error: ".mysqli_error($dbc)."\n";
-		mysqli_close($dbc);
-		return false;
-	}
+	
+
 
 }
 
