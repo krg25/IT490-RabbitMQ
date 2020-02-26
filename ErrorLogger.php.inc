@@ -1,1 +1,1 @@
-../IT490-ErrorLogging/ErrorLogger.php.inc
+../IT490-Logging/ErrorLogger.php.inc
