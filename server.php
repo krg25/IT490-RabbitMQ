@@ -5,8 +5,11 @@ require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 ini_set('display_errors', 'On');
 
+
 function doLogin($username,$password)
 {
+	require_once('Logger.php.inc');
+	$logger = new logger("DBListener->doLogin",'rabbit.ini');
 	if (!isset($dbc)){
 	require('mysqli_connect.php');
 	}
@@ -18,19 +21,19 @@ function doLogin($username,$password)
 	if (empty(mysqli_error($dbc))){
 		if ($num == 1){
 		mysqli_close($dbc);
-		echo "Valid login!\n";
+		$logger->logDebug('Success','Logged in Successfully');
 		return true;
 		}
 		else
 		{
-		echo "Error: Incorrect login\n";
+			$logger->logDebug('Login Failure',"Invalid Credentials");
 		mysqli_close($dbc);
 		return false;
 		}
 	}
 	else
 	{
-		echo "SQL Error: ".mysqli_error($dbc)."\n";
+		$logger->logError("SQL Error","ERROR",mysqli_error($dbc));
 		mysqli_close($dbc);
 		return false;
 	}
@@ -38,6 +41,9 @@ function doLogin($username,$password)
 }
 function doRegister($username,$password,$email,$fname,$lname)
 {
+	
+	require_once('Logger.php.inc');
+	$logger = new logger("DBListener->doRegister",'rabbit.ini');
 	if (!isset($dbc)){
 	require('mysqli_connect.php');
 	}
@@ -48,12 +54,12 @@ function doRegister($username,$password,$email,$fname,$lname)
 
 	if (empty(mysqli_error($dbc))){
 		mysqli_close($dbc);
-		echo "New Registration!\n";
+		$logger->logDebug('Success',"New Registration");
 		return true;
 		}
 		else
 		{
-		echo "A registration resulted in an error: ".mysqli_error($dbc).PHP_EOL;
+			$logger->logDebug("Success", mysqli_error($dbc).PHP_EOL);
 		mysqli_close($dbc);
 		return false;
 		}
@@ -64,22 +70,27 @@ function doRegister($username,$password,$email,$fname,$lname)
 
 function requestProcessor($request)
 {
+  require_once('Logger.php.inc');
+  $logger = new logger("DBListener->requestProcessor",'rabbit.ini');
+
   echo "received request".PHP_EOL;
   var_dump($request);
 
 
   if(!isset($request['type']))
   {
-    return "ERROR: unsupported message type";
+    return $logger->logError("Invalid Request","ERROR","Received an invalid request type.";
   }
   switch ($request['type'])
   {
     case "Login":
-     if(doLogin($request['username'],$request['password'])){
+	    if(doLogin($request['username'],$request['password'])){
+	$logger->logDebug("Success","Successful Login");
 	  return array("returnCode" => '1', 'message'=>"Successful Login");
 	}
 	else
 	{
+	$logger->logDebug("Failure","Failed Login");
 	  return array("returnCode" => '2', 'message'=>"Unsuccessful Login");
 	}
     
@@ -87,10 +98,12 @@ function requestProcessor($request)
 	
      case "Register":
      if(doRegister($request['username'],$request['password'],$request['email'],$request['fname'],$request['lname'])){
+	$logger->logDebug("Success","Successful Registration");
 	  return array("returnCode" => '1', 'message'=>"Successful Registration");
 	}
 	else
 	{
+	$logger->logError("Failure","ERROR","Unsuccessful Registration");
 	  return array("returnCode" => '2', 'message'=>"Unsuccessful Registration");
 	}
 
@@ -99,6 +112,7 @@ function requestProcessor($request)
       return doValidate($request['sessionId']);
   }
 
+	$logger->logError("Bad Message Type","ERROR","Unsupported Message Type");
    return array("returnCode" => '0', 'message'=>"Error, unsupported message type");
 }
 
