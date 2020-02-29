@@ -5,6 +5,36 @@ require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 ini_set('display_errors', 'On');
 
+
+function getUserInfo($id){
+        if (!isset($dbc)){
+        require('mysqli_connect.php');
+        }
+        $q = "SELECT * FROM SiteUsers WHERE (user_id='$id')";
+        $r = @mysqli_query($dbc, $q);
+        $num = @mysqli_num_rows($r);
+	$report = mysqli_fetch_assoc($r);
+
+	if (empty(mysqli_error($dbc))){
+           if ($num == 1){
+		$out['0']=true;
+		$out['id']=$report['user_id'];
+		$out['user']=$report['username'];
+		$out['fname']=$report['first_name'];
+		$out['lname']=$report['last_name'];
+		$out['date']=$report['date_joined'];
+        	mysqli_close($dbc);
+                return $out;
+            }
+            else
+            {
+                $out['0']=false;
+                mysqli_close($dbc);
+                return $out;
+            }
+        }
+
+}
 function doLogin($username,$password)
 {
 	if (!isset($dbc)){
@@ -13,26 +43,30 @@ function doLogin($username,$password)
 	$q = "SELECT * FROM SiteUsers WHERE (username='$username' AND password='$password')";
 	$r = @mysqli_query($dbc, $q);
 	$num = @mysqli_num_rows($r);
-	$report = "";
+	$report = mysqli_fetch_assoc($r);
 
 	if (empty(mysqli_error($dbc))){
 		if ($num == 1){
+			$out['0'] = true;
+			$out['id']=$report['user_id'];
 		mysqli_close($dbc);
 		echo "Valid login!\n";
-		return true;
+		return  $out;
 		}
 		else
 		{
 		echo "Error: Incorrect login\n";
 		mysqli_close($dbc);
-		return false;
+			$out['0'] = false;
+		return  $out;
 		}
 	}
 	else
 	{
 		echo "SQL Error: ".mysqli_error($dbc)."\n";
 		mysqli_close($dbc);
-		return false;
+			$out['0'] = false;
+		return  $out;
 	}
 
 }
@@ -47,15 +81,22 @@ function doRegister($username,$password,$email,$fname,$lname)
 	$report = "";
 
 	if (empty(mysqli_error($dbc))){
+		$q = "SELECT * FROM SiteUsers WHERE (username='$username' AND password='$password')";
+		$r = @mysqli_query($dbc, $q);
+		$num = @mysqli_num_rows($r);
+		$report = mysqli_fetch_assoc($r);
+			$out['0'] = true;
+			$out['id']=$report['user_id'];
 		mysqli_close($dbc);
 		echo "New Registration!\n";
-		return true;
+		return  $out;
 		}
 		else
 		{
 		echo "A registration resulted in an error: ".mysqli_error($dbc).PHP_EOL;
+		$out['0']=false;
 		mysqli_close($dbc);
-		return false;
+		return $out;
 		}
 	
 
@@ -75,8 +116,9 @@ function requestProcessor($request)
   switch ($request['type'])
   {
     case "Login":
-     if(doLogin($request['username'],$request['password'])){
-	  return array("returnCode" => '1', 'message'=>"Successful Login");
+    $login=doLogin($request['username'],$request['password']);
+     if($login['0']){
+	return array("returnCode" => '1', 'message'=>"Successful Login", 'ID' => $login['id']);	
 	}
 	else
 	{
@@ -84,10 +126,11 @@ function requestProcessor($request)
 	}
     
 
-	
+	//Ken was here, change this to operate like login.
      case "Register":
-     if(doRegister($request['username'],$request['password'],$request['email'],$request['fname'],$request['lname'])){
-	  return array("returnCode" => '1', 'message'=>"Successful Registration");
+     $register=doRegister($request['username'],$request['password'],$request['email'],$request['fname'],$request['lname']);
+     if($register['0']){
+	  return array("returnCode" => '1', 'message'=>"Successful Registration", 'ID' => $register['id']);
 	}
 	else
 	{
@@ -95,7 +138,28 @@ function requestProcessor($request)
 	}
 
 
-    case "validate_session":
+     case "Profile":
+	$userinfo=getUserInfo($request['ID']);
+	if($userinfo['0']){
+	
+
+	return array(
+	"returnCode" => '1',
+	"id" => $userinfo['id'],
+	"username" => $userinfo['user'],
+	"fname" => $userinfo['fname'],
+	"lname" => $userinfo['lname'],
+	"date" => $userinfo['date']
+	);
+
+	}else{
+	return array("returnCode" => '2');
+	}
+
+	
+
+
+     case "validate_session":
       return doValidate($request['sessionId']);
   }
 
